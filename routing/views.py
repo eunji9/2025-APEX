@@ -1,7 +1,4 @@
-from django.shortcuts import render
-
-# Create your views here.
-import json
+from django.shortcuts import render, redirect
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_GET, require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -77,3 +74,30 @@ def dashboard_text(request):
         lines.append(f"{st.floor.level}F " + ", ".join(parts))
 
     return HttpResponse("\n".join(lines) + "\n", content_type="text/plain; charset=utf-8")
+
+
+
+# 관리자용 view
+@require_GET
+def floor1_page(request):
+    """첫 화면: 1층 도면 페이지 (HTML)"""
+    # 페이지에서 바로 그릴 수 있도록 1층 데이터 미리 가져가도 되고
+    # (템플릿에서 fetch로 /routing/shortest-path/ 를 호출해도 됨)
+    level = 1
+    data = distances_all(level, sources=[])  # 필요시 sources 지정
+    ctx = {
+        "level": level,
+        "graph_data": data,  # 템플릿에서 JSON 직렬화해서 사용
+    }
+    return render(request, "routing/floor1.html", ctx)
+
+@require_GET
+def dashboard_page(request):
+    """대시보드(HTML) 버전: 텍스트가 아닌 테이블/뷰로 보여주기"""
+    states = FloorState.objects.select_related("floor").order_by("floor__level")
+    rows = []
+    for st in states:
+        lr = st.last_result or {}
+        triples = lr.get("all_edges_dir", [])
+        rows.append({"level": st.floor.level, "edges": triples})
+    return render(request, "routing/dashboard.html", {"rows": rows})

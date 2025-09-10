@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dongguk University 신공학관</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #2a2a2a;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .header {
+            background: #3a3a3a;
+            padding: 20px;
+            border-bottom: 1px solid #555;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 28px;
+            font-weight: normal;
+        }
+
+        .header .subtitle {
+            color: #ccc;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 80px);
+        }
+
+        .left-panel {
+            flex: 1;
+            background: #404040;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .floor-tabs {
+            display: flex;
+            background: #4a4a4a;
+            padding: 0;
+        }
+
+        .floor-tab {
+            flex: 1;
+            padding: 15px 20px;
+            background: #5a5a5a;
+            color: #ccc;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border-radius: 8px 8px 0 0;
+            margin-right: 2px;
+        }
+
+        .floor-tab.active {
+            background: #6a6a6a;
+            color: white;
+        }
+
+        .floor-tab:hover {
+            background: #656565;
+        }
+
+        .floor-content {
+            flex: 1;
+            background: #404040;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .floor-plan {
+            width: 400px;
+            height: 500px;
+            background: #6a6a6a;
+            border-radius: 8px;
+            padding: 20px;
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .room {
+            position: absolute;
+            background: #e8e8e8;
+            border: 2px solid #333;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .room:hover {
+            background: #f0f0f0;
+            border-color: #555;
+        }
+
+        .room.fire-location {
+            background: #ff6b6b;
+            border-color: #ff4444;
+            animation: fireGlow 1s infinite alternate;
+        }
+
+        @keyframes fireGlow {
+            from { box-shadow: 0 0 10px #ff6b6b; }
+            to { box-shadow: 0 0 20px #ff4444; }
+        }
+
+        .node {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: #4ecdc4;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid #369;
+            z-index: 10;
+        }
+
+        .node:hover {
+            background: #45b7d1;
+            transform: scale(1.2);
+        }
+
+        .node.fire-node {
+            background: #ff6b6b;
+            border-color: #ff4444;
+            animation: firePulse 1s infinite;
+        }
+
+        @keyframes firePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+        }
+
+        .exit-icon {
+            position: absolute;
+            font-size: 24px;
+            z-index: 15;
+            animation: exitBounce 2s infinite;
+        }
+
+        @keyframes exitBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .escape-route {
+            position: absolute;
+            height: 4px;
+            background: linear-gradient(90deg, #4ecdc4, #45b7d1);
+            z-index: 5;
+            border-radius: 2px;
+            animation: routeFlow 2s infinite;
+            box-shadow: 0 0 8px rgba(78, 205, 196, 0.6);
+        }
+
+        @keyframes routeFlow {
+            0% { opacity: 0.4; }
+            50% { opacity: 1; }
+            100% { opacity: 0.4; }
+        }
+
+        .escape-route::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: 0;
+            right: 0;
+            bottom: -2px;
+            background: linear-gradient(90deg, transparent, rgba(78, 205, 196, 0.3), transparent);
+            border-radius: 4px;
+            animation: routePulse 3s infinite;
+        }
+
+        @keyframes routePulse {
+            0%, 100% { transform: scaleY(1); }
+            50% { transform: scaleY(1.5); }
+        }
+
+        .mode-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            z-index: 20;
+        }
+
+        .mode-indicator.training {
+            background: rgba(255, 107, 107, 0.8);
+        }
+
+        .mode-indicator.evacuation {
+            background: rgba(78, 205, 196, 0.8);
+        }
+
+        /* 1층 방 배치 */
+        .room-1 {
+            top: 80px;
+            left: 40px;
+            width: 80px;
+            height: 120px;
+        }
+
+        .room-2 {
+            top: 80px;
+            left: 140px;
+            width: 80px;
+            height: 200px;
+        }
+
+        .room-3 {
+            top: 80px;
+            left: 240px;
+            width: 80px;
+            height: 120px;
+        }
+
+        .room-4 {
+            top: 220px;
+            left: 240px;
+            width: 80px;
+            height: 60px;
+        }
+
+        .room-5 {
+            top: 300px;
+            left: 40px;
+            width: 80px;
+            height: 120px;
+        }
+
+        .room-6 {
+            top: 300px;
+            left: 140px;
+            width: 180px;
+            height: 120px;
+        }
+
+        .right-panel {
+            width: 120px;
+            background: #404040;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .action-button {
+            width: 70px;
+            height: 70px;
+            background: #8a4fff;
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .action-button:hover {
+            background: #9a5fff;
+            transform: translateY(-2px);
+        }
+
+        .action-button .icon {
+            font-size: 20px;
+        }
+
+        .action-button .label {
+            font-size: 10px;
+            font-weight: normal;
+        }
+
+        .back-button {
+            background: #666;
+        }
+
+        .back-button:hover {
+            background: #777;
+        }
+
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .right-panel {
+                width: 100%;
+                height: 80px;
+                flex-direction: row;
+                padding: 10px;
+            }
+            
+            .floor-plan {
+                width: 300px;
+                height: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Dongguk University</h1>
+        <div class="subtitle">신공학관</div>
+    </div>
+
+    <div class="main-container">
+        <div class="left-panel">
+            <div class="floor-tabs">
+                <button class="floor-tab active" onclick="switchFloor(1)">1F</button>
+                <button class="floor-tab" onclick="switchFloor(2)">2F</button>
+                <button class="floor-tab" onclick="switchFloor(3)">3F</button>
+            </div>
+            
+            <div class="floor-content">
+                <div class="floor-plan" id="floorPlan">
+                    <!-- 모드 표시기 -->
+                    <div class="mode-indicator" id="modeIndicator" style="display: none;"></div>
+                    
+                    <!-- 1층 평면도 -->
+                    <div class="room room-1" id="room1"></div>
+                    <div class="room room-2" id="room2"></div>
+                    <div class="room room-3" id="room3"></div>
+                    <div class="room room-4" id="room4"></div>
+                    <div class="room room-5" id="room5"></div>
+                    <div class="room room-6" id="room6"></div>
+                    
+                    <!-- 노드들 (가상훈련용) -->
+                    <div class="node" id="node1" style="top: 50px; left: 100px; display: none;" onclick="setFireLocation(this)"></div>
+                    <div class="node" id="node2" style="top: 150px; left: 200px; display: none;" onclick="setFireLocation(this)"></div>
+                    <div class="node" id="node3" style="top: 250px; left: 150px; display: none;" onclick="setFireLocation(this)"></div>
+                    <div class="node" id="node4" style="top: 350px; left: 80px; display: none;" onclick="setFireLocation(this)"></div>
+                    <div class="node" id="node5" style="top: 200px; left: 300px; display: none;" onclick="setFireLocation(this)"></div>
+                    <div class="node" id="node6" style="top: 100px; left: 250px; display: none;" onclick="setFireLocation(this)"></div>
+                    
+                    <!-- 탈출구 아이콘들 (건물대피용) -->
+                    <div class="exit-icon" id="exit1" style="top: 20px; left: 50px; display: none;">🚪</div>
+                    <div class="exit-icon" id="exit2" style="top: 450px; left: 180px; display: none;">🚪</div>
+                    <div class="exit-icon" id="exit3" style="top: 200px; left: 350px; display: none;">🚪</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-panel">
+            <button class="action-button" onclick="startTrainingMode()">
+                <div class="icon">🎯</div>
+                <div class="label">가상훈련</div>
+            </button>
+            
+            <button class="action-button" onclick="startEvacuationMode()">
+                <div class="icon">🚶</div>
+                <div class="label">건물대피</div>
+            </button>
+            
+            <button class="action-button back-button" onclick="resetMode()">
+                <div class="icon">↶</div>
+                <div class="label">초기화</div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        let currentMode = null; // 'training' or 'evacuation'
+        let fireLocation = null;
+        let escapeRoutes = [];
+
+        // 가상훈련 모드 시작
+        function startTrainingMode() {
+            currentMode = 'training';
+            
+            // 모드 표시기 업데이트
+            const indicator = document.getElementById('modeIndicator');
+            indicator.style.display = 'block';
+            indicator.textContent = '🔥 가상훈련 모드 - 화재 위치를 선택하세요';
+            indicator.className = 'mode-indicator training';
+            
+            // 노드들 표시
+            showNodes();
+            hideExits();
+            
+            alert('가상훈련 모드가 시작되었습니다.\n파란색 노드를 클릭하여 화재 위치를 설정하세요.');
+        }
+
+        // 건물대피 모드 시작
+        function startEvacuationMode() {
+            currentMode = 'evacuation';
+            
+            // 모드 표시기 업데이트
+            const indicator = document.getElementById('modeIndicator');
+            indicator.style.display = 'block';
+            indicator.textContent = '🚪 건물대피 모드 - 출구를 클릭하여 대피 경로 확인';
+            indicator.className = 'mode-indicator evacuation';
+            
+            // 탈출구들 표시
+            showExits();
+            hideNodes();
+            
+            // 탈출구 클릭 이벤트 추가
+            document.querySelectorAll('.exit-icon').forEach(exit => {
+                exit.onclick = () => showEvacuationRoute(exit);
+                exit.style.cursor = 'pointer';
+            });
+            
+            alert('건물대피 모드가 활성화되었습니다.\n출구를 클릭하여 해당 출구로의 대피 경로를 확인하세요.');
+        }
+
+        // 화재 위치 설정
+        function setFireLocation(nodeElement) {
+            if (currentMode !== 'training') return;
+            
+            // 이전 화재 노드 초기화
+            document.querySelectorAll('.node').forEach(node => {
+                node.classList.remove('fire-node');
+            });
+            
+            // 새 화재 위치 설정
+            nodeElement.classList.add('fire-node');
+            fireLocation = nodeElement;
+            
+            // 최적 경로 계산 및 표시
+            setTimeout(() => {
+                showOptimalRoute(nodeElement);
+                
+                const indicator = document.getElementById('modeIndicator');
+                indicator.textContent = '🔥 화재 발생! 최적 탈출 경로를 확인하세요';
+            }, 500);
+            
+            alert('화재 위치가 설정되었습니다!\n최적 탈출 경로를 계산 중...');
+        }
+
+        // 노드들 표시
+        function showNodes() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.style.display = 'block';
+            });
+        }
+
+        // 노드들 숨기기
+        function hideNodes() {
+            document.querySelectorAll('.node').forEach(node => {
+                node.style.display = 'none';
+                node.classList.remove('fire-node');
+            });
+        }
+
+        // 탈출구들 표시
+        function showExits() {
+            document.querySelectorAll('.exit-icon').forEach(exit => {
+                exit.style.display = 'block';
+            });
+        }
+
+        // 탈출구들 숨기기
+        function hideExits() {
+            document.querySelectorAll('.exit-icon').forEach(exit => {
+                exit.style.display = 'none';
+                exit.onclick = null; // 클릭 이벤트 제거
+            });
+        }
+
+        // 대피 경로 표시 (건물대피 모드용)
+        function showEvacuationRoute(targetExit) {
+            // 기존 경로 제거
+            document.querySelectorAll('.escape-route').forEach(route => {
+                route.remove();
+            });
+            
+            // 모든 방에서 해당 출구로의 대피 경로 생성
+            const rooms = document.querySelectorAll('.room');
+            const floorPlan = document.getElementById('floorPlan');
+            
+            rooms.forEach(room => {
+                const evacuationPath = findEvacuationPath(room, targetExit);
+                if (evacuationPath.length > 0) {
+                    createMultiSegmentRoute(evacuationPath, room);
+                }
+            });
+            
+            // 선택된 출구 하이라이트
+            document.querySelectorAll('.exit-icon').forEach(exit => {
+                exit.style.filter = exit === targetExit ? 'brightness(1.5) drop-shadow(0 0 10px #4ecdc4)' : 'brightness(0.7)';
+            });
+            
+            const indicator = document.getElementById('modeIndicator');
+            indicator.textContent = '🏃 대피 경로 표시 중 - 파란색 선을 따라 대피하세요';
+        }
+
+        // 대피 경로 찾기 (A* 알고리즘 간소화 버전)
+        function findEvacuationPath(startRoom, targetExit) {
+            const startRect = startRoom.getBoundingClientRect();
+            const exitRect = targetExit.getBoundingClientRect();
+            const floorPlanRect = document.getElementById('floorPlan').getBoundingClientRect();
+            
+            // 시작점 (방의 중심)
+            const startX = startRect.left - floorPlanRect.left + startRect.width / 2;
+            const startY = startRect.top - floorPlanRect.top + startRect.height / 2;
+            
+            // 도착점 (출구 위치)
+            const endX = exitRect.left - floorPlanRect.left + 12;
+            const endY = exitRect.top - floorPlanRect.top + 12;
+            
+            // 경로 포인트들 계산
+            const path = [];
+            const rooms = document.querySelectorAll('.room');
+            
+            // 직선 경로가 장애물과 충돌하는지 확인
+            if (!hasObstacleInPath(startX, startY, endX, endY, rooms, floorPlanRect)) {
+                // 직선 경로 가능
+                path.push({x: startX, y: startY});
+                path.push({x: endX, y: endY});
+            } else {
+                // 우회 경로 계산
+                const waypoints = calculateWaypoints(startX, startY, endX, endY, rooms, floorPlanRect);
+                path.push({x: startX, y: startY});
+                path.push(...waypoints);
+                path.push({x: endX, y: endY});
+            }
+            
+            return path;
+        }
+
+        // 장애물 충돌 검사
+        function hasObstacleInPath(x1, y1, x2, y2, rooms, floorPlanRect) {
+            for (let room of rooms) {
+                const roomRect = room.getBoundingClientRect();
+                const roomX = roomRect.left - floorPlanRect.left;
+                const roomY = roomRect.top - floorPlanRect.top;
+                const roomW = roomRect.width;
+                const roomH = roomRect.height;
+                
+                // 선분과 사각형의 교차 검사
+                if (lineIntersectsRect(x1, y1, x2, y2, roomX, roomY, roomW, roomH)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        // 선분과 사각형 교차 검사
+        function lineIntersectsRect(x1, y1, x2, y2, rx, ry, rw, rh) {
+            // 선분의 양 끝점이 사각형 내부에 있는지 확인
+            if ((x1 >= rx && x1 <= rx + rw && y1 >= ry && y1 <= ry + rh) ||
+                (x2 >= rx && x2 <= rx + rw && y2 >= ry && y2 <= ry + rh)) {
+                return true;
+            }
+            
+            // 선분이 사각형의 변과 교차하는지 확인
+            return (
+                lineIntersectsLine(x1, y1, x2, y2, rx, ry, rx + rw, ry) ||     // 상단
+                lineIntersectsLine(x1, y1, x2, y2, rx + rw, ry, rx + rw, ry + rh) || // 우측
+                lineIntersectsLine(x1, y1, x2, y2, rx + rw, ry + rh, rx, ry + rh) || // 하단
+                lineIntersectsLine(x1, y1, x2, y2, rx, ry + rh, rx, ry)          // 좌측
+            );
+        }
+
+        // 두 선분의 교차 검사
+        function lineIntersectsLine(x1, y1, x2, y2, x3, y3, x4, y4) {
+            const denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+            if (denom === 0) return false;
+            
+            const t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom;
+            const u = -((x1 - x2) * (y1 - y3) - (y1 - y2) * (x1 - x3)) / denom;
+            
+            return t >= 0 && t <= 1 && u >= 0 && u <= 1;
+        }
+
+        // 우회 경로 계산
+        function calculateWaypoints(startX, startY, endX, endY, rooms, floorPlanRect) {
+            const waypoints = [];
+            
+            // 각 방의 모서리를 우회점으로 고려
+            rooms.forEach(room => {
+                const roomRect = room.getBoundingClientRect();
+                const roomX = roomRect.left - floorPlanRect.left;
+                const roomY = roomRect.top - floorPlanRect.top;
+                const roomW = roomRect.width;
+                const roomH = roomRect.height;
+                
+                // 방의 네 모서리 + 여유 공간
+                const margin = 15;
+                const corners = [
+                    {x: roomX - margin, y: roomY - margin},         // 좌상
+                    {x: roomX + roomW + margin, y: roomY - margin}, // 우상
+                    {x: roomX + roomW + margin, y: roomY + roomH + margin}, // 우하
+                    {x: roomX - margin, y: roomY + roomH + margin}  // 좌하
+                ];
+                
+                // 시작점과 끝점 사이의 방향을 고려하여 최적 우회점 선택
+                const bestCorner = corners.reduce((best, corner) => {
+                    const distToStart = Math.sqrt(Math.pow(corner.x - startX, 2) + Math.pow(corner.y - startY, 2));
+                    const distToEnd = Math.sqrt(Math.pow(corner.x - endX, 2) + Math.pow(corner.y - endY, 2));
+                    const totalDist = distToStart + distToEnd;
+                    
+                    if (!best || totalDist < best.totalDist) {
+                        return {...corner, totalDist};
+                    }
+                    return best;
+                }, null);
+                
+                if (bestCorner) {
+                    waypoints.push({x: bestCorner.x, y: bestCorner.y});
+                }
+            });
+            
+            // 중복 제거 및 최적화
+            return waypoints.slice(0, 2); // 최대 2개의 우회점만 사용
+        }
+
+        // 다중 세그먼트 경로 생성 (가상훈련 & 건물대피 공용)
+        function createMultiSegmentRoute(pathPoints, sourceRoom = null) {
+            const floorPlan = document.getElementById('floorPlan');
+            
+            for (let i = 0; i < pathPoints.length - 1; i++) {
+                const start = pathPoints[i];
+                const end = pathPoints[i + 1];
+                
+                const route = document.createElement('div');
+                route.className = 'escape-route';
+                
+                const length = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2));
+                const angle = Math.atan2(end.y - start.y, end.x - start.x) * 180 / Math.PI;
+                
+                route.style.width = length + 'px';
+                route.style.left = start.x + 'px';
+                route.style.top = start.y + 'px';
+                route.style.transform = `rotate(${angle}deg)`;
+                route.style.transformOrigin = '0 50%';
+                
+                // 가상훈련 모드일 때는 더 강조된 스타일
+                if (currentMode === 'training') {
+                    route.style.height = '6px';
+                    route.style.background = 'linear-gradient(90deg, #ff6b6b, #ff8e8e)';
+                    route.style.boxShadow = '0 0 12px rgba(255, 107, 107, 0.8)';
+                    route.style.zIndex = '15';
+                } else {
+                    // 건물대피 모드 스타일 유지
+                    route.style.opacity = '0.7';
+                    route.style.animationDelay = Math.random() * 2 + 's';
+                }
+                
+                floorPlan.appendChild(route);
+            }
+        }
+
+        // 최적 경로 표시 (가상훈련용 - 건물 구조 고려)
+        function showOptimalRoute(fireNode) {
+            // 기존 경로 제거
+            document.querySelectorAll('.escape-route').forEach(route => {
+                route.remove();
+            });
+            
+            // 화재 위치에서 가장 가까운 탈출구 찾기
+            const fireRect = fireNode.getBoundingClientRect();
+            const exits = document.querySelectorAll('.exit-icon');
+            const floorPlanRect = document.getElementById('floorPlan').getBoundingClientRect();
+            
+            let nearestExit = null;
+            let minDistance = Infinity;
+            
+            exits.forEach(exit => {
+                const exitRect = exit.getBoundingClientRect();
+                const distance = Math.sqrt(
+                    Math.pow(fireRect.left - exitRect.left, 2) + 
+                    Math.pow(fireRect.top - exitRect.top, 2)
+                );
+                
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    nearestExit = exit;
+                }
+            });
+            
+            if (nearestExit) {
+                // 탈출구 표시
+                nearestExit.style.display = 'block';
+                
+                // 화재 노드에서 가장 가까운 탈출구로의 실제 경로 계산
+                const fireX = fireRect.left - floorPlanRect.left + 10;
+                const fireY = fireRect.top - floorPlanRect.top + 10;
+                const exitRect = nearestExit.getBoundingClientRect();
+                const exitX = exitRect.left - floorPlanRect.left + 12;
+                const exitY = exitRect.top - floorPlanRect.top + 12;
+                
+                // 건물 구조를 고려한 경로 계산
+                const evacuationPath = findTrainingEvacuationPath(fireX, fireY, exitX, exitY);
+                
+                // 경로 그리기
+                createMultiSegmentRoute(evacuationPath);
+                
+                // 화재 위치 하이라이트
+                highlightFireLocation(fireNode, floorPlanRect);
+            }
+        }
+
+        // 가상훈련용 대피 경로 찾기
+        function findTrainingEvacuationPath(startX, startY, endX, endY) {
+            const rooms = document.querySelectorAll('.room');
+            const floorPlanRect = document.getElementById('floorPlan').getBoundingClientRect();
+            
+            // 직선 경로가 장애물과 충돌하는지 확인
+            if (!hasObstacleInPath(startX, startY, endX, endY, rooms, floorPlanRect)) {
+                // 직선 경로 가능
+                return [{x: startX, y: startY}, {x: endX, y: endY}];
+            } else {
+                // 우회 경로 계산
+                const waypoints = calculateOptimalWaypoints(startX, startY, endX, endY, rooms, floorPlanRect);
+                const path = [{x: startX, y: startY}];
+                path.push(...waypoints);
+                path.push({x: endX, y: endY});
+                return path;
+            }
+        }
+
+        // 최적 우회점 계산 (가상훈련용)
+        function calculateOptimalWaypoints(startX, startY, endX, endY, rooms, floorPlanRect) {
+            const waypoints = [];
+            const obstacleRooms = [];
+            
+            // 경로상에 있는 장애물 방들 찾기
+            rooms.forEach(room => {
+                const roomRect = room.getBoundingClientRect();
+                const roomX = roomRect.left - floorPlanRect.left;
+                const roomY = roomRect.top - floorPlanRect.top;
+                const roomW = roomRect.width;
+                const roomH = roomRect.height;
+                
+                if (lineIntersectsRect(startX, startY, endX, endY, roomX, roomY, roomW, roomH)) {
+                    obstacleRooms.push({
+                        x: roomX, y: roomY, w: roomW, h: roomH,
+                        centerX: roomX + roomW/2, centerY: roomY + roomH/2
+                    });
+                }
+            });
+            
+            if (obstacleRooms.length === 0) return waypoints;
+            
+            // 각 장애물에 대해 최적 우회점 계산
+            obstacleRooms.forEach(room => {
+                const margin = 20; // 안전 거리
+                
+                // 네 모서리 + 여유 공간
+                const corners = [
+                    {x: room.x - margin, y: room.y - margin},         // 좌상
+                    {x: room.x + room.w + margin, y: room.y - margin}, // 우상
+                    {x: room.x + room.w + margin, y: room.y + room.h + margin}, // 우하
+                    {x: room.x - margin, y: room.y + room.h + margin}  // 좌하
+                ];
+                
+                // 시작점과 끝점을 고려한 최적 경로 선택
+                let bestPath = null;
+                let shortestDistance = Infinity;
+                
+                // 각 모서리를 경유하는 경로의 거리 계산
+                corners.forEach(corner => {
+                    const dist1 = Math.sqrt(Math.pow(corner.x - startX, 2) + Math.pow(corner.y - startY, 2));
+                    const dist2 = Math.sqrt(Math.pow(endX - corner.x, 2) + Math.pow(endY - corner.y, 2));
+                    const totalDist = dist1 + dist2;
+                    
+                    // 경계 체크 - 평면도 범위 내에 있는지 확인
+                    if (corner.x >= 0 && corner.x <= 400 && corner.y >= 0 && corner.y <= 500) {
+                        if (totalDist < shortestDistance) {
+                            shortestDistance = totalDist;
+                            bestPath = corner;
+                        }
+                    }
+                });
+                
+                if (bestPath) {
+                    waypoints.push(bestPath);
+                }
+            });
+            
+            // 중복 제거 및 거리 순 정렬
+            const uniqueWaypoints = waypoints.filter((point, index, arr) => {
+                return arr.findIndex(p => Math.abs(p.x - point.x) < 10 && Math.abs(p.y - point.y) < 10) === index;
+            });
+            
+            // 시작점에서 가까운 순으로 정렬
+            uniqueWaypoints.sort((a, b) => {
+                const distA = Math.sqrt(Math.pow(a.x - startX, 2) + Math.pow(a.y - startY, 2));
+                const distB = Math.sqrt(Math.pow(b.x - startX, 2) + Math.pow(b.y - startY, 2));
+                return distA - distB;
+            });
+            
+            return uniqueWaypoints.slice(0, 2); // 최대 2개의 우회점
+        }
+
+        // 화재 위치 하이라이트
+        function highlightFireLocation(fireNode, floorPlanRect) {
+            const rooms = document.querySelectorAll('.room');
+            const fireRect = fireNode.getBoundingClientRect();
+            
+            rooms.forEach(room => {
+                const roomRect = room.getBoundingClientRect();
+                
+                // 화재 노드와 가장 가까운 방 찾기
+                if (Math.abs(roomRect.left - fireRect.left) < 60 && 
+                    Math.abs(roomRect.top - fireRect.top) < 60) {
+                    room.classList.add('fire-location');
+                }
+            });
+        }
+
+        // 모드 초기화
+        function resetMode() {
+            currentMode = null;
+            fireLocation = null;
+            
+            // 모드 표시기 숨기기
+            document.getElementById('modeIndicator').style.display = 'none';
+            
+            // 모든 요소 숨기기
+            hideNodes();
+            hideExits();
+            
+            // 화재 위치 및 경로 초기화
+            document.querySelectorAll('.room').forEach(room => {
+                room.classList.remove('fire-location');
+            });
+            
+            // 모든 대피 경로 제거
+            document.querySelectorAll('.escape-route').forEach(route => {
+                route.remove();
+            });
+            
+            // 출구 필터 초기화
+            document.querySelectorAll('.exit-icon').forEach(exit => {
+                exit.style.filter = 'none';
+            });
+            
+            alert('모든 설정이 초기화되었습니다.');
+        }
+
+        function switchFloor(floor) {
+            // 탭 활성화 상태 변경
+            const tabs = document.querySelectorAll('.floor-tab');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs[floor - 1].classList.add('active');
+
+            // 평면도 변경
+            const floorPlan = document.getElementById('floorPlan');
+            const rooms = document.querySelectorAll('.room');
+            
+            // 모든 방 숨기기
+            rooms.forEach(room => room.style.display = 'none');
+            
+            // 현재 모드 유지하면서 층 변경
+            if (currentMode) {
+                resetMode(); // 층 변경 시 모드 초기화
+            }
+            
+            // 해당 층 평면도 표시
+            switch(floor) {
+                case 1:
+                    // 1층 방들 표시
+                    document.querySelectorAll('.room').forEach(room => {
+                        room.style.display = 'block';
+                    });
+                    break;
+                case 2:
+                    // 2층 평면도 (예시)
+                    updateFloorLayout2();
+                    break;
+                case 3:
+                    // 3층 평면도 (예시)
+                    updateFloorLayout3();
+                    break;
+            }
+        }
+
+        function updateFloorLayout2() {
+            const rooms = document.querySelectorAll('.room');
+            rooms.forEach((room, index) => {
+                room.style.display = 'block';
+                // 2층 레이아웃으로 위치 조정
+                if (index === 0) {
+                    room.style.top = '60px';
+                    room.style.left = '50px';
+                    room.style.width = '100px';
+                    room.style.height = '100px';
+                }
+                if (index === 1) {
+                    room.style.top = '60px';
+                    room.style.left = '170px';
+                    room.style.width = '120px';
+                    room.style.height = '180px';
+                }
+                // 나머지 방들도 유사하게 배치
+            });
+        }
+
+        function updateFloorLayout3() {
+            const rooms = document.querySelectorAll('.room');
+            rooms.forEach((room, index) => {
+                room.style.display = 'block';
+                // 3층 레이아웃으로 위치 조정
+                if (index === 0) {
+                    room.style.top = '80px';
+                    room.style.left = '60px';
+                    room.style.width = '80px';
+                    room.style.height = '140px';
+                }
+                if (index === 1) {
+                    room.style.top = '80px';
+                    room.style.left = '160px';
+                    room.style.width = '90px';
+                    room.style.height = '160px';
+                }
+                // 나머지 방들도 유사하게 배치
+            });
+        }
+
+        // 초기 로드 시 1층 표시
+        document.addEventListener('DOMContentLoaded', function() {
+            switchFloor(1);
+        });
+    </script>
+</body>
+</html>
