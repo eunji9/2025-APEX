@@ -290,6 +290,40 @@
                 height: 400px;
             }
         }
+
+        /* [ADD] 장애물/오버레이 레이어 */
+        #obstaclesLayer, #overlayLayer {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 5;  /* 노드(10)보다 아래, 이미지(0)보다 위 */
+        }
+        .obstacle-poly { fill: rgba(255,0,0,0.0); stroke: transparent; } /* 디버그시 fill:rgba(255,0,0,0.12) */
+
+        /* [ADD] 최단경로 라인 */
+        .route-line {
+            stroke: #ff6b6b;
+            stroke-width: 6;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            filter: drop-shadow(0 0 8px rgba(255,107,107,0.8));
+            animation: routePulseGlow 1.4s infinite ease-in-out;
+            fill: none;
+        }
+        @keyframes routePulseGlow {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+
+        /* [ADD] 초록 화살표 */
+        .edge-arrow {
+            stroke: none;
+            fill: rgba(78,205,196,0.95);
+            filter: drop-shadow(0 0 6px rgba(78,205,196,0.6));
+        }
+
     </style>
 </head>
 <body>
@@ -313,6 +347,18 @@
                     
                     <!-- 층 평면도 이미지 -->
                     <img id="floorImage" class="floor-image" src="/static/img/floor1.png" alt="1F"/>
+
+                    <!-- [ADD] 장애물(방) 폴리곤 레이어 -->
+                    <svg id="obstaclesLayer" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+                        <g id="obstacles"></g>
+                    </svg>
+                    
+                    <!-- [ADD] 경로/화살표 오버레이 레이어 -->
+                    <svg id="overlayLayer" viewBox="0 0 800 600" preserveAspectRatio="xMidYMid meet">
+                        <g id="arrowsGroup"></g>
+                        <g id="routeGroup"></g>
+                    </svg>
+                    
                     
                     <!-- 노드들 (가상훈련용) -->
                     <div class="node" id="node1" style="top: 50px; left: 100px; display: none;" onclick="setFireLocation(this)"></div>
