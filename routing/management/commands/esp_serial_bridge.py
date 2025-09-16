@@ -45,22 +45,29 @@ class Command(BaseCommand):
                     res = apply_esp_code(line)
                     status_str = res.get("status", "invalid")
                     try:
-                         # 1) 상태 ACK
-                        ser.write((status_str + "\n").encode())
-                        
-                            # 2) 모든 층 방향정보 라인 전송: "1F (u,v,d), ...", "2F ...", "3F ..."
+                        # 🔄 아두이노로 보낼 페이로드: (층, from, to) 배열만 전송(JSON 한 줄)
                         for lvl in (1, 2, 3):
-            # 최초엔 last_result가 없을 수 있으니 보장
                             fl = Floor.objects.get(level=lvl)
                             st, _ = FloorState.objects.get_or_create(floor=fl)
                             if not st.last_result:
                                 st.last_result = distances_all(level=lvl)
                                 st.save(update_fields=['last_result', 'updated_at'])
-                            out_line = floor_edge_dirs_line(lvl) + "\n"
-                            ser.write(out_line.encode())
+
+                            triples = []
+                            dirs = (st.last_result or {}).get('all_edges_dir', [])
+                            for u, v, d in dirs:
+                                # 타입 정규화(문자/숫자/불리언 모두 안전)
+                                u_i = int(str(u).strip())
+                                v_i = int(str(v).strip())
+                                #ds  = str(d).strip().lower()
+                                #d_i = 1 if ds in ('1', 'true', 't') else 0
+                                # d==0: u→v (정방향), d==1: v→u (역방향 → 뒤집기)
+                                #from_n, to_n = (u_i, v_i) if d_i == 0 else (v_i, u_i)#
+                                triples.append([lvl, v_i, u_i])
+                            payload = ','.join(f'[{a},{b},{c}]' for a,b,c in triples)
+                            ser.write((payload + ",").encode())
+                            ser.flush()
                             time.sleep(0.1)
-
-
                     except Exception as e:
                         self.stderr.write(f"[serial] write error: {e}")
 

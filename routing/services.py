@@ -4,7 +4,6 @@ from django.db import transaction
 from routing.models import Floor, Edge, StartNode, FloorState
 from routing.algorithms.dijkstra import dijkstra_multisource, reconstruct_path
 
-
 # ---------- 내부 유틸 ----------
 
 def _collect_excluded_edges(floor: Floor) -> List[Tuple[str, str]]:
@@ -183,17 +182,17 @@ def apply_esp_code(code: str) -> Dict:
       '1' -> 1층 (1,2) 제외
       '2' -> 2층 (1,2) 제외
       '3' -> 3층 (1,2) 제외
-      '4' -> 1층 (8,9) 제외
-      '5' -> 2층 (7,8) 제외
-      '6' -> 3층 (9,10) 제외
+      '4' -> 1층 (9,10) 제외
+      '5' -> 2층 (8,9) 제외
+      '6' -> 3층 (7,8) 제외
     """
     MAP = {
         '1': (1, '1', '2'),
         '2': (2, '1', '2'),
         '3': (3, '1', '2'),
-        '4': (1, '8', '9'),
-        '5': (2, '7', '8'),
-        '6': (3, '9', '10'),
+        '4': (1, '9', '10'),
+        '5': (2, '8', '9'),
+        '6': (3, '7', '8'),
     }
     if code not in MAP:
         return {"status": "invalid"}

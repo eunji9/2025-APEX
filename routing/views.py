@@ -1,11 +1,13 @@
+import json
 from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse
-from django.views.decorators.http import require_GET, require_POST
+from django.http import JsonResponse, HttpResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from django.views.decorators.csrf import csrf_exempt
 
 from routing.forms import ShortestPathForm
 from routing.models import FloorState
-from routing.services import shortest_to_target, distances_all, apply_esp_code
+from routing.services import shortest_to_target, distances_all, apply_esp_code, reset_exclusions
+
 
 
 @require_GET
@@ -101,3 +103,42 @@ def dashboard_page(request):
         triples = lr.get("all_edges_dir", [])
         rows.append({"level": st.floor.level, "edges": triples})
     return render(request, "routing/dashboard.html", {"rows": rows})
+
+
+
+# 리셋버튼 관련 -->
+
+def _parse_floors(request):
+    """
+    floors를 [1,2,3] 형태로 파싱
+    - GET:  /api/reset-exclusions/?floors=1,2,3
+    - POST: {"floors":[1,2,3]} 또는 {"floors": "1,2,3"}
+    생략 시 None(= 전체 층)
+    """
+    floors = None
+    if request.method == 'GET':
+        q = request.GET.get('floors')
+        if q:
+            floors = [int(x) for x in q.split(',') if x.strip().isdigit()]
+    else:  # POST
+        try:
+            data = json.loads((request.body or b'{}').decode('utf-8'))
+        except json.JSONDecodeError:
+            return HttpResponseBadRequest('Invalid JSON')
+        val = data.get('floors')
+        if isinstance(val, (list, tuple)):
+            floors = [int(x) for x in val if str(x).isdigit()]
+        elif isinstance(val, str):
+            floors = [int(x) for x in val.split(',') if x.strip().isdigit()]
+    return floors
+
+@csrf_exempt                        # CSRF 없이 쓰려면 유지 (POST 쓸 때 편함). GET만 쓸 거면 굳이 없어도 됨.
+@require_http_methods(['GET', 'POST'])
+def reset_exclusions_view(request):
+    floors = _parse_floors(request)
+    if isinstance(floors, HttpResponseBadRequest):
+        return floors
+
+    # 핵심: services.py 의 reset_exclusions 실행 (네가 올린 함수 그대로 사용)
+    res = reset_exclusions(levels=floors)  # {"status":"ok", "floors":[...]}
+    return JsonResponse({"ok": True, **res})

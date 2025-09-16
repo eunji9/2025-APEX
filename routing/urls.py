@@ -1,6 +1,6 @@
 # figma 추가 dashboard
 from django.urls import path
-from .views import shortest_path_view, esp_event_view, dashboard_text, floor1_page, dashboard_page
+from .views import shortest_path_view, esp_event_view, dashboard_text, floor1_page, dashboard_page, reset_exclusions_view
 from django.views.generic import RedirectView
 
 urlpatterns = [
@@ -11,4 +11,6 @@ urlpatterns = [
 
     path('floor1/', floor1_page, name='floor1-page'),
     path('dashboard/', dashboard_page, name='dashboard-page'),
+
+    path('api/reset-exclusions/', reset_exclusions_view, name='reset-exclusions'),
 ]

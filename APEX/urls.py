@@ -23,4 +23,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("", dashboard_page, name="dashboard"),     
     path('routing/', include('routing.urls')),
+    path('api/', include('routing.urls')),
 ]
