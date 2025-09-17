@@ -251,7 +251,6 @@
         .action-button {
             width: 80px;
             height: 80px;
-            background: #8a4fff;
             border: none;
             border-radius: 12px;
             color: white;
@@ -262,11 +261,12 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 1px;
         }
 
         .action-button:hover {
-            background: #9a5fff;
+            width: 90px;
+            height: 90px;
             transform: translateY(-2px);
         }
 
@@ -277,14 +277,6 @@
         .action-button .label {
             font-size: 10px;
             font-weight: normal;
-        }
-
-        .back-button {
-            background: #666;
-        }
-
-        .back-button:hover {
-            background: #777;
         }
 
         @media (max-width: 768px) {
@@ -304,6 +296,28 @@
                 height: 400px;
             }
         }
+        /* 불꽃🔥 크기가 커졌다 작아졌다 하는 'pulse' 애니메이션 */
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);   /* 원래 크기 */
+            }
+            50% {
+                transform: scale(1.35); /* 커졌다가 */
+            }
+        }
+
+        /* 불꽃 이미지에 애니메이션 적용 */
+        .fires-g image {
+            animation: pulse 1.5s infinite ease-in-out;
+            transform-origin: center center; /* 반드시 중앙 기준 */
+            transform-box: fill-box;         /* SVG 내부 기준 좌표 고정 */
+        }
+
+        /* 두 번째 불꽃은 약간 늦게 시작해서 자연스러움을 더함 */
+        .fires-g image:nth-child(2) {
+            animation-delay: 0.7s;
+        }
+
     </style>
 </head>
 <body>
@@ -421,9 +435,10 @@
                             <line id="edge-3-12-13" class="edge" data-u="12" data-v="13" x1="555" y1="188" x2="555" y2="438" />
                         </g>
                         <g id="arrows-3f"></g>
+                        <g width="400" height="400" viewBox="0 0 400 400">
                         <g id="fires-3" class="fires-g">
-                            <image data-edge="1-2" href="/static/img/fire.png" x="255" y="124" width="28" height="28" />
-                            <image data-edge="7-8" href="/static/img/fire.png" x="433" y="33" width="28" height="28" />
+                            <image data-edge="1-2" href="/static/img/fire.png" x="255" y="124" width="28" height="28"/>
+                            <image data-edge="7-8" href="/static/img/fire.png" x="433" y="33" width="28" height="28"/>
                         </g>
                         <g id="evac-3" class="evac-g" style="display:none">
                             <image href="/static/img/stair.png" x="525" y="73" width="30" height="30" opacity="1" xlink:href="/static/img/stair.png"/>
@@ -440,20 +455,12 @@
         <script src="/static/js/dashboard.js" defer></script>
 
         <div class="right-panel">
-            <button class="action-button" onclick="startTrainingMode()">
-                <div class="icon">🎯</div>
-                <div class="label">가상훈련</div>
-            </button>
+            <!--옆에 배너 이미지--> 
+            <img src="/static/img/exit.svg" alt="exit" class="action-button" onclick="startTrainingMode()"/>
             
-            <button class="action-button" onclick="startEvacuationMode()">
-                <div class="icon">🚶</div>
-                <div class="label">건물대피</div>
-            </button>
+            <img src="/static/img/practice.svg" alt="practice" class="action-button" onclick="startEvacuationMode()">
             
-            <button class="action-button back-button" onclick="resetMode()">
-                <div class="icon">↶</div>
-                <div class="label">초기화</div>
-            </button>
+            <img src="/static/img/reset.svg" alt="reset" class="action-button back-button" onclick="resetMode()">
         </div>
     </div>
 
